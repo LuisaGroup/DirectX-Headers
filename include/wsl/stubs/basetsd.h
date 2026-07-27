@@ -16,14 +16,20 @@
 
 // Note: using fixed-width here to match Windows widths
 // Specifically this is different for 'long' vs 'LONG'
+#ifndef DXC_UINT8_DEFINED
 typedef uint8_t UINT8;
 typedef int8_t INT8;
 typedef uint16_t UINT16;
 typedef int16_t INT16;
+#endif
+#ifndef DXC_ULONG_DEFINED
 typedef uint32_t UINT32, UINT, ULONG, DWORD, BOOL, WINBOOL;
 typedef int32_t INT32, INT, LONG;
+#endif
+#ifndef DXC_ULONG_PTR_DEFINED
 typedef uint64_t UINT64, ULONG_PTR;
 typedef int64_t INT64, LONG_PTR;
+#endif
 typedef void VOID, *HANDLE, *RPC_IF_HANDLE, *LPVOID;
 typedef const void *LPCVOID;
 typedef size_t SIZE_T;
@@ -33,20 +39,32 @@ typedef unsigned char BYTE;
 typedef int HWND;
 typedef int PALETTEENTRY;
 typedef int HDC;
+#ifndef DXC_WORD_DEFINED
 typedef uint16_t WORD;
+#endif
 typedef void* PVOID;
+#ifndef DXC_BOOLEAN_DEFINED
 typedef char BOOLEAN;
+#endif
+#ifndef DXC_ULONGLONG_DEFINED
 typedef uint64_t ULONGLONG;
+#endif
 typedef uint16_t USHORT, *PUSHORT;
+#ifndef DXC_LONGLONG_DEFINED
 typedef int64_t LONGLONG, *PLONGLONG;
+#endif
+#ifndef DXC_LONG_PTR_DEFINED
 typedef int64_t LONG_PTR, *PLONG_PTR;
+#endif
 typedef int64_t LONG64, *PLONG64;
 typedef uint64_t ULONG64, *PULONG64;
 typedef wchar_t WCHAR, *PWSTR;
 typedef uint8_t UCHAR, *PUCHAR;
+#ifndef DXC_ULONG_PTR_DEFINED
 typedef uint64_t ULONG_PTR, *PULONG_PTR;
 typedef uint64_t UINT_PTR, *PUINT_PTR;
 typedef int64_t INT_PTR, *PINT_PTR;
+#endif
 
 // Note: WCHAR is not the same between Windows and Linux, to enable
 // string manipulation APIs to work with resulting strings.
@@ -98,6 +116,7 @@ typedef struct tagPOINT
     int y;
 } POINT;
 
+#ifndef DXC_GUID_DEFINED
 typedef struct _GUID {
     uint32_t Data1;
     uint16_t Data2;
@@ -147,6 +166,7 @@ inline bool operator!=(REFGUID guidOne, REFGUID guidOther)
 #define REFIID const IID *
 #define REFCLSID const IID *
 #endif
+#endif // DXC_GUID_DEFINED
 
 // SAL annotations
 #define _In_
@@ -260,7 +280,9 @@ extern "C++"
 #endif
 
 // Error codes
+#ifndef DXC_HRESULT_DEFINED
 typedef LONG HRESULT;
+#endif
 #define SUCCEEDED(hr)  (((HRESULT)(hr)) >= 0)
 #define FAILED(hr)     (((HRESULT)(hr)) < 0)
 #define S_OK           ((HRESULT)0L)
@@ -285,6 +307,7 @@ typedef LONG HRESULT;
 #define DXGI_ERROR_DRIVER_INTERNAL_ERROR ((HRESULT)0x887A0020L)
 #define DXGI_ERROR_SDK_COMPONENT_MISSING ((HRESULT)0x887A002DL)
 
+#ifndef DXC_LARGE_INTEGER_DEFINED
 typedef struct _LUID
 {
     ULONG LowPart;
@@ -330,7 +353,9 @@ typedef struct _SECURITY_ATTRIBUTES {
 } SECURITY_ATTRIBUTES;
 
 struct STATSTG;
+#endif // DXC_LARGE_INTEGER_DEFINED
 
+#ifndef DXC_ENUM_FLAG_OPERATORS_DEFINED
 #ifdef __cplusplus
 // ENUM_FLAG_OPERATORS
 // Define operator overloads to enable bit operations on enum values that are
@@ -385,6 +410,7 @@ inline ENUMTYPE &operator ^= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((_
 #else
 #define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) /* */
 #endif
+#endif // DXC_ENUM_FLAG_OPERATORS_DEFINED
 
 // D3DX12 uses these
 #include <stdlib.h>
