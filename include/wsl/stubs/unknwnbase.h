@@ -34,6 +34,10 @@
 #ifndef __unknwnbase_h__
 #define __unknwnbase_h__
 
+/* When DXC's WinAdapter.h is in use it already provides its own COM
+ * interface definitions (IUnknown, ...), so skip ours to avoid conflicts. */
+#ifndef DXC_WIN_ADAPTER_DEFINED
+
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
 #endif
@@ -118,7 +122,10 @@ interface IUnknown {
 #endif
 
 #endif /* __IUnknown_INTERFACE_DEFINED__ */
-
 DEFINE_GUID(IID_IUnknown, 0x00000000, 0x0000, 0x0000, 0xc0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46);
+
+#endif // DXC_WIN_ADAPTER_DEFINED
+
+#endif /* __unknwnbase_h__ */
 
 #endif /* __unknwnbase_h__ */

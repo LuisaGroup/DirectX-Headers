@@ -15,7 +15,9 @@
 #endif
 
 /* Macros for __uuidof template-based emulation */
-#if defined(__cplusplus)
+/* Skip these when DXC's WinAdapter.h is in use; it provides its own
+ * __uuidof/__CRT_UUID_DECL emulation and the two would conflict. */
+#if defined(__cplusplus) && !defined(DXC_WIN_ADAPTER_DEFINED)
 #if __cpp_constexpr >= 200704l && __cpp_inline_variables >= 201606L
 #define __wsl_stub_uuidof_use_constexpr 1
 #else

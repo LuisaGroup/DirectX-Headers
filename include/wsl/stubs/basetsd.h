@@ -5,8 +5,17 @@
 
 // These #defines prevent the idl-generated headers from trying to include
 // Windows.h from the SDK rather than this one.
+#ifndef RPC_NO_WINDOWS_H
 #define RPC_NO_WINDOWS_H
+#endif
+#ifndef COM_NO_WINDOWS_H
 #define COM_NO_WINDOWS_H
+#endif
+
+// When DXC's WinAdapter.h has already been included it exposes a family of
+// DXC_*_DEFINED macros signalling which Windows types/macros it provides.
+// Skip the conflicting definitions below in that case so the two adapter
+// layers can coexist in the same translation unit.
 
 // Allcaps type definitions
 #include <stddef.h>
@@ -18,24 +27,49 @@
 // Specifically this is different for 'long' vs 'LONG'
 #ifndef DXC_UINT8_DEFINED
 typedef uint8_t UINT8;
+#endif
 typedef int8_t INT8;
 typedef uint16_t UINT16;
 typedef int16_t INT16;
+#ifndef DXC_UINT32_DEFINED
+typedef uint32_t UINT32, UINT;
 #endif
 #ifndef DXC_ULONG_DEFINED
-typedef uint32_t UINT32, UINT, ULONG, DWORD, BOOL, WINBOOL;
-typedef int32_t INT32, INT, LONG;
+typedef uint32_t ULONG;
+#endif
+#ifndef DXC_DWORD_DEFINED
+typedef uint32_t DWORD;
+#endif
+#ifndef DXC_BOOL_DEFINED
+typedef uint32_t BOOL, WINBOOL;
+#endif
+typedef int32_t INT32, INT;
+#ifndef DXC_LONG_DEFINED
+typedef int32_t LONG;
+#endif
+#ifndef DXC_UINT64_DEFINED
+typedef uint64_t UINT64;
 #endif
 #ifndef DXC_ULONG_PTR_DEFINED
-typedef uint64_t UINT64, ULONG_PTR;
-typedef int64_t INT64, LONG_PTR;
+typedef uint64_t ULONG_PTR;
 #endif
-typedef void VOID, *HANDLE, *RPC_IF_HANDLE, *LPVOID;
+typedef int64_t INT64;
+typedef int64_t *PLONGLONG;
+#ifndef DXC_LONG_PTR_DEFINED
+typedef int64_t LONG_PTR;
+#endif
+typedef int64_t *PLONG_PTR;
+typedef void VOID;
+#ifndef DXC_WIN_ADAPTER_DEFINED
+typedef void *HANDLE, *RPC_IF_HANDLE, *LPVOID;
 typedef const void *LPCVOID;
 typedef size_t SIZE_T;
+#endif
 typedef float FLOAT;
 typedef double DOUBLE;
+#ifndef DXC_WIN_ADAPTER_DEFINED
 typedef unsigned char BYTE;
+#endif
 typedef int HWND;
 typedef int PALETTEENTRY;
 typedef int HDC;
@@ -51,20 +85,23 @@ typedef uint64_t ULONGLONG;
 #endif
 typedef uint16_t USHORT, *PUSHORT;
 #ifndef DXC_LONGLONG_DEFINED
-typedef int64_t LONGLONG, *PLONGLONG;
-#endif
-#ifndef DXC_LONG_PTR_DEFINED
-typedef int64_t LONG_PTR, *PLONG_PTR;
+typedef int64_t LONGLONG;
 #endif
 typedef int64_t LONG64, *PLONG64;
 typedef uint64_t ULONG64, *PULONG64;
+#ifndef DXC_WIN_ADAPTER_DEFINED
 typedef wchar_t WCHAR, *PWSTR;
+#else
+typedef wchar_t *PWSTR;
+#endif
 typedef uint8_t UCHAR, *PUCHAR;
 #ifndef DXC_ULONG_PTR_DEFINED
 typedef uint64_t ULONG_PTR, *PULONG_PTR;
+#else
+typedef uint64_t *PULONG_PTR;
+#endif
 typedef uint64_t UINT_PTR, *PUINT_PTR;
 typedef int64_t INT_PTR, *PINT_PTR;
-#endif
 
 // Note: WCHAR is not the same between Windows and Linux, to enable
 // string manipulation APIs to work with resulting strings.
@@ -72,8 +109,13 @@ typedef int64_t INT_PTR, *PINT_PTR;
 // interactions directly with the Windows kernel.
 typedef char CHAR, *PSTR, *LPSTR, TCHAR, *PTSTR;
 typedef const char *LPCSTR, *PCSTR, *LPCTSTR, *PCTSTR;
+#ifndef DXC_WIN_ADAPTER_DEFINED
 typedef wchar_t WCHAR, *PWSTR, *LPWSTR, *PWCHAR;
 typedef const wchar_t *LPCWSTR, *PCWSTR;
+#else
+typedef wchar_t *LPWSTR, *PWCHAR;
+typedef const wchar_t *LPCWSTR, *PCWSTR;
+#endif
 
 #undef LONG_MAX
 #define LONG_MAX INT_MAX
@@ -81,8 +123,11 @@ typedef const wchar_t *LPCWSTR, *PCWSTR;
 #define ULONG_MAX UINT_MAX
 
 // Misc defines
+#ifndef DXC_WIN_ADAPTER_DEFINED
 #define MIDL_INTERFACE(x) interface
+#endif
 #define __analysis_assume(x)
+#ifndef DXC_WIN_ADAPTER_DEFINED
 #define TRUE 1u
 #define FALSE 0u
 #define DECLSPEC_UUID(x)
@@ -93,14 +138,18 @@ typedef const wchar_t *LPCWSTR, *PCWSTR;
 #else
 #define EXTERN_C extern
 #endif
+#endif // DXC_WIN_ADAPTER_DEFINED
 #define APIENTRY
 #define OUT
 #define IN
 #define CONST const
 #define MAX_PATH 260
 #define GENERIC_ALL 0x10000000L
+#ifndef DXC_WIN_ADAPTER_DEFINED
 #define C_ASSERT(expr) static_assert((expr))
 #define _countof(a) (sizeof(a) / sizeof(*(a)))
+#define UNREFERENCED_PARAMETER(P) (P)
+#endif
 
 typedef struct tagRECTL
 {
@@ -169,86 +218,213 @@ inline bool operator!=(REFGUID guidOne, REFGUID guidOther)
 #endif // DXC_GUID_DEFINED
 
 // SAL annotations
+#ifndef _In_
 #define _In_
+#endif
+#ifndef _In_z_
 #define _In_z_
+#endif
+#ifndef _In_opt_
 #define _In_opt_
+#endif
+#ifndef _In_opt_z_
 #define _In_opt_z_
+#endif
+#ifndef _In_reads_
 #define _In_reads_(x)
+#endif
+#ifndef _In_reads_opt_
 #define _In_reads_opt_(x)
+#endif
+#ifndef _In_reads_bytes_
 #define _In_reads_bytes_(x)
+#endif
+#ifndef _In_reads_bytes_opt_
 #define _In_reads_bytes_opt_(x)
+#endif
+#ifndef _In_range_
 #define _In_range_(x, y)
+#endif
+#ifndef _In_bytecount_
 #define _In_bytecount_(x)
+#endif
+#ifndef _Out_
 #define _Out_
+#endif
+#ifndef _Out_opt_
 #define _Out_opt_
+#endif
+#ifndef _Outptr_
 #define _Outptr_
+#endif
+#ifndef _Outptr_opt_result_z_
 #define _Outptr_opt_result_z_
+#endif
+#ifndef _Outptr_opt_result_bytebuffer_
 #define _Outptr_opt_result_bytebuffer_(x)
+#endif
+#ifndef _COM_Outptr_
 #define _COM_Outptr_
+#endif
+#ifndef _COM_Outptr_result_maybenull_
 #define _COM_Outptr_result_maybenull_
+#endif
+#ifndef _COM_Outptr_opt_
 #define _COM_Outptr_opt_
+#endif
+#ifndef _COM_Outptr_opt_result_maybenull_
 #define _COM_Outptr_opt_result_maybenull_
+#endif
+#ifndef _Out_writes_
 #define _Out_writes_(x)
+#endif
+#ifndef _Out_writes_z_
 #define _Out_writes_z_(x)
+#endif
+#ifndef _Out_writes_opt_
 #define _Out_writes_opt_(x)
+#endif
+#ifndef _Out_writes_all_
 #define _Out_writes_all_(x)
+#endif
+#ifndef _Out_writes_all_opt_
 #define _Out_writes_all_opt_(x)
+#endif
+#ifndef _Out_writes_to_opt_
 #define _Out_writes_to_opt_(x, y)
+#endif
+#ifndef _Out_writes_bytes_
 #define _Out_writes_bytes_(x)
+#endif
+#ifndef _Out_writes_bytes_all_
 #define _Out_writes_bytes_all_(x)
+#endif
+#ifndef _Out_writes_bytes_all_opt_
 #define _Out_writes_bytes_all_opt_(x)
+#endif
+#ifndef _Out_writes_bytes_opt_
 #define _Out_writes_bytes_opt_(x)
+#endif
+#ifndef _Inout_
 #define _Inout_
+#endif
+#ifndef _Inout_opt_
 #define _Inout_opt_
+#endif
+#ifndef _Inout_updates_
 #define _Inout_updates_(x)
+#endif
+#ifndef _Inout_updates_bytes_
 #define _Inout_updates_bytes_(x)
+#endif
+#ifndef _Field_size_
 #define _Field_size_(x)
+#endif
+#ifndef _Field_size_opt_
 #define _Field_size_opt_(x)
+#endif
+#ifndef _Field_size_bytes_
 #define _Field_size_bytes_(x)
+#endif
+#ifndef _Field_size_full_
 #define _Field_size_full_(x)
+#endif
+#ifndef _Field_size_full_opt_
 #define _Field_size_full_opt_(x)
+#endif
+#ifndef _Field_size_bytes_full_
 #define _Field_size_bytes_full_(x)
+#endif
+#ifndef _Field_size_bytes_full_opt_
 #define _Field_size_bytes_full_opt_(x)
+#endif
+#ifndef _Field_size_bytes_part_
 #define _Field_size_bytes_part_(x, y)
+#endif
+#ifndef _Field_range_
 #define _Field_range_(x, y)
+#endif
+#ifndef _Field_z_
 #define _Field_z_
+#endif
+#ifndef _Check_return_
 #define _Check_return_
+#endif
+#ifndef _IRQL_requires_
 #define _IRQL_requires_(x)
+#endif
+#ifndef _IRQL_requires_min_
 #define _IRQL_requires_min_(x)
+#endif
+#ifndef _IRQL_requires_max_
 #define _IRQL_requires_max_(x)
+#endif
+#ifndef _At_
 #define _At_(x, y)
+#endif
+#ifndef _Always_
 #define _Always_(x)
+#endif
+#ifndef _Return_type_success_
 #define _Return_type_success_(x)
+#endif
+#ifndef _Translates_Win32_to_HRESULT_
 #define _Translates_Win32_to_HRESULT_(x)
+#endif
+#ifndef _Maybenull_
 #define _Maybenull_
+#endif
+#ifndef _Outptr_result_maybenull_
 #define _Outptr_result_maybenull_
+#endif
+#ifndef _Outptr_result_nullonfailure_
 #define _Outptr_result_nullonfailure_
+#endif
+#ifndef _Analysis_assume_
 #define _Analysis_assume_(x)
+#endif
+#ifndef _Success_
 #define _Success_(x)
+#endif
+#ifndef _In_count_
 #define _In_count_(x)
+#endif
+#ifndef _In_opt_count_
 #define _In_opt_count_(x)
+#endif
+#ifndef _Use_decl_annotations_
 #define _Use_decl_annotations_
+#endif
+#ifndef _Null_terminated_
 #define _Null_terminated_
+#endif
 
 // Calling conventions
+#ifndef DXC_WIN_ADAPTER_DEFINED
 #define __cdecl
 #define __stdcall
 #define STDMETHODCALLTYPE
+#endif
 #define STDAPICALLTYPE
 #define STDAPI EXTERN_C HRESULT STDAPICALLTYPE
 #define WINAPI
 
 #define interface struct
 #if defined (__cplusplus) && !defined (CINTERFACE)
+#ifndef DXC_WIN_ADAPTER_DEFINED
 #define STDMETHOD(method) virtual HRESULT STDMETHODCALLTYPE method
 #define STDMETHOD_(type, method) virtual type STDMETHODCALLTYPE method
-#define PURE = 0
 #define THIS_
 #define THIS void
+#endif
+#define PURE = 0
+#ifndef DXC_WIN_ADAPTER_DEFINED
 #define DECLARE_INTERFACE(iface) interface DECLSPEC_NOVTABLE iface
 #define DECLARE_INTERFACE_(iface, baseiface) interface DECLSPEC_NOVTABLE iface : public baseiface
+#endif
 
 interface IUnknown;
+#ifndef DXC_WIN_ADAPTER_DEFINED
 extern "C++"
 {
     template<typename T> void** IID_PPV_ARGS_Helper(T** pp)
@@ -258,12 +434,14 @@ extern "C++"
     }
 }
 #define IID_PPV_ARGS(ppType) __uuidof (**(ppType)), IID_PPV_ARGS_Helper (ppType)
+#endif
 #else
+#ifndef DXC_WIN_ADAPTER_DEFINED
 #define STDMETHOD(method) HRESULT (STDMETHODCALLTYPE *method)
 #define STDMETHOD_(type, method) type (STDMETHODCALLTYPE *method)
-#define PURE
 #define THIS_ INTERFACE *This,
 #define THIS INTERFACE *This
+#endif
 #ifdef CONST_VTABLE
 #define DECLARE_INTERFACE(iface) typedef interface iface { const struct iface##Vtbl *lpVtbl; } iface; typedef const struct iface##Vtbl iface##Vtbl; const struct iface##Vtbl
 #else
@@ -283,6 +461,7 @@ extern "C++"
 #ifndef DXC_HRESULT_DEFINED
 typedef LONG HRESULT;
 #endif
+#ifndef DXC_WIN_ADAPTER_DEFINED
 #define SUCCEEDED(hr)  (((HRESULT)(hr)) >= 0)
 #define FAILED(hr)     (((HRESULT)(hr)) < 0)
 #define S_OK           ((HRESULT)0L)
@@ -297,6 +476,7 @@ typedef LONG HRESULT;
 #define E_FAIL         ((HRESULT)0x80004005L)
 #define E_ACCESSDENIED ((HRESULT)0x80070005L)
 #define E_UNEXPECTED   ((HRESULT)0x8000FFFFL)
+#endif // DXC_WIN_ADAPTER_DEFINED
 #define DXGI_ERROR_INVALID_CALL ((HRESULT)0x887A0001L)
 #define DXGI_ERROR_NOT_FOUND ((HRESULT)0x887A0002L)
 #define DXGI_ERROR_MORE_DATA ((HRESULT)0x887A0003L)
@@ -307,7 +487,6 @@ typedef LONG HRESULT;
 #define DXGI_ERROR_DRIVER_INTERNAL_ERROR ((HRESULT)0x887A0020L)
 #define DXGI_ERROR_SDK_COMPONENT_MISSING ((HRESULT)0x887A002DL)
 
-#ifndef DXC_LARGE_INTEGER_DEFINED
 typedef struct _LUID
 {
     ULONG LowPart;
@@ -322,6 +501,7 @@ typedef struct _RECT
     int bottom;
 } RECT;
 
+#ifndef DXC_LARGE_INTEGER_DEFINED
 typedef union _LARGE_INTEGER {
   struct {
     uint32_t LowPart;
@@ -330,7 +510,9 @@ typedef union _LARGE_INTEGER {
   int64_t QuadPart;
 } LARGE_INTEGER;
 typedef LARGE_INTEGER *PLARGE_INTEGER;
+#endif
 
+#ifndef DXC_ULARGE_INTEGER_DEFINED
 typedef union _ULARGE_INTEGER {
   struct {
     uint32_t LowPart;
@@ -339,21 +521,25 @@ typedef union _ULARGE_INTEGER {
   uint64_t QuadPart;
 } ULARGE_INTEGER;
 typedef ULARGE_INTEGER *PULARGE_INTEGER;
+#endif
 
+#ifndef DXC_WIN_ADAPTER_DEFINED
 #define DECLARE_HANDLE(name)                                                   \
   struct name##__ {                                                            \
     int unused;                                                                \
   };                                                                           \
   typedef struct name##__ *name
+#endif
 
 typedef struct _SECURITY_ATTRIBUTES {
     DWORD nLength;
     LPVOID lpSecurityDescriptor;
-    WINBOOL bInheritHandle;
+    BOOL bInheritHandle;
 } SECURITY_ATTRIBUTES;
 
+#ifndef DXC_STATSTG_DEFINED
 struct STATSTG;
-#endif // DXC_LARGE_INTEGER_DEFINED
+#endif
 
 #ifndef DXC_ENUM_FLAG_OPERATORS_DEFINED
 #ifdef __cplusplus
@@ -413,9 +599,11 @@ inline ENUMTYPE &operator ^= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((_
 #endif // DXC_ENUM_FLAG_OPERATORS_DEFINED
 
 // D3DX12 uses these
+#ifndef DXC_WIN_ADAPTER_DEFINED
 #include <stdlib.h>
 #define HeapAlloc(heap, flags, size) malloc(size)
 #define HeapFree(heap, flags, ptr) free(ptr)
+#endif
 
 #if defined(lint)
 // Note: lint -e530 says don't complain about uninitialized variables for
@@ -427,6 +615,4 @@ inline ENUMTYPE &operator ^= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((_
         (P) = (P); \
     } \
     /*lint -restore */
-#else
-#define UNREFERENCED_PARAMETER(P) (P)
 #endif
